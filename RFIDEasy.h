@@ -33,6 +33,9 @@ class RFIDEasy
 		String read(int startBlock, int endBlock);
 
 		// Addons
+		void endProcess();
+		void clearBlock(int blockNumber, char character);
+		void clear(int startBlock, int endBlock, char character);
 		int sizeBlocks(int buffer_length);
 		int sizeBlocks(String text);
 
@@ -40,6 +43,7 @@ class RFIDEasy
 		MFRC522::MIFARE_Key key;
 
 		// Utilities
+		bool checkTrailerBlock(int blockNumber);
 		byte* normalize(int blocks, byte buffer[], int buffer_length);
 		void subArray(int start, int length, byte array[], byte subarray[]);
 };

@@ -2,6 +2,7 @@
 
 /**
  * Default constructor
+ * Receives the RFID sensor pins as arguments
  */
 RFIDEasy::RFIDEasy(int SS_PIN, int RST_PIN) {
 	this->mfrc522 = new MFRC522(SS_PIN, RST_PIN);
@@ -63,7 +64,7 @@ void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 	// Check if successful
 	if (status != MFRC522::STATUS_OK) {
 		Serial.print("[ERROR] PCD_Authenticate() failed: ");
-		Serial.println(mfrc522->GetStatusCodeName(status));
+		Serial.println(this->mfrc522->GetStatusCodeName(status));
 		return;
 	}
 	// it appears the authentication needs to be made before every block read/write within a specific sector.
@@ -77,7 +78,7 @@ void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 	// Check if successful
 	if (status != MFRC522::STATUS_OK) {
 		Serial.print("[ERROR] MIFARE_Write() failed: ");
-		Serial.println(mfrc522->GetStatusCodeName(status));
+		Serial.println(this->mfrc522->GetStatusCodeName(status));
 		return;
 	}
 }
@@ -183,7 +184,7 @@ void RFIDEasy::write(int startBlock, byte buffer[], int buffer_length) {
 		currentBlock++;
 
 		// Avoid trailer blocks
-		if(currentBlock % 4 == 0)
+		if(this->checkTrailerBlock(currentBlock))
 			currentBlock++;
 
 		// Update blocks writed count
@@ -201,11 +202,11 @@ void RFIDEasy::write(int startBlock, byte buffer[], int buffer_length) {
  */
 void RFIDEasy::write(int startBlock, String text) {
 	// Create buffer
-	byte buffer[text.length()];
-	text.getBytes(buffer, text.length());
+	byte buffer[text.length() + 1];
+	text.getBytes(buffer, text.length() + 1);
 
 	// Run method
-	this->write(startBlock, buffer, text.length());
+	this->write(startBlock, buffer, text.length() + 1);
 }
 
 /**
@@ -218,11 +219,67 @@ String RFIDEasy::read(int startBlock, int endBlock) {
 	String response = "";
 
 	// Reads data and trims the end
+	int currentBlock = startBlock;
 	for(int i = 0; i < endBlock - startBlock + 1; i++) {
-		response += String(this->readBlock(i + startBlock)).substring(0, 16);
+		// Skip if hit the trailing block
+		if(this->checkTrailerBlock(currentBlock))
+			currentBlock++;
+
+		// Read the data
+		String test = this->readBlock(currentBlock);
+		response += String(test).substring(0, 16);
+
+		// Add to the current read block
+		currentBlock++;
 	}
 
 	return response;
+}
+
+/**
+ * End the communication between the RFID sensor and arduino
+ */
+void RFIDEasy::endProcess() {
+	this->mfrc522->PICC_HaltA();
+  	this->mfrc522->PCD_StopCrypto1();
+}
+
+/**
+ * Clears a block in the tag filling with the specified character
+ * @param blockNumber The block to clear
+ * @param character   The character to fill
+ */
+void RFIDEasy::clearBlock(int blockNumber, char character) {
+	// Create the data
+	String sequence = "";
+	for(int i = 0; i < 16; i++)
+		sequence += character;
+
+	// Clears the block
+	this->writeBlock(blockNumber, sequence);
+}
+
+/**
+ * Clears a area in the tag filling with the specified character
+ * @param startBlock  The start block to clear
+ * @param endBlock    The end block to clear
+ * @param character   The character to fill
+ */
+void RFIDEasy::clear(int startBlock, int endBlock, char character) {
+
+	// Reads data and trims the end
+	int currentBlock = startBlock;
+	for(int i = 0; i < endBlock - startBlock + 1; i++) {
+		// Skip if hit the trailing block
+		if(this->checkTrailerBlock(currentBlock))
+			currentBlock++;
+
+		// Clears the block
+		this->clearBlock(currentBlock, character);	
+
+		// Add to the current read block
+		currentBlock++;
+	}
 }
 
 /**
@@ -244,6 +301,17 @@ int RFIDEasy::sizeBlocks(int buffer_length) {
  */
 int RFIDEasy::sizeBlocks(String text) {
 	return this->sizeBlocks(text.length());
+}
+
+/**
+ * Checks if a block is a trailer or not
+ * @param  blockNumber The block to check
+ * @return             [description]
+ */
+bool RFIDEasy::checkTrailerBlock(int blockNumber) {
+	// Check for block number
+	// block number is a trailer block (modulo 4)
+	return (blockNumber > 2 && (blockNumber + 1) % 4 == 0);
 }
 
 /**
