@@ -15,6 +15,22 @@ RFIDEasy::RFIDEasy(int SS_PIN, int RST_PIN) {
 }
 
 /**
+ * Run the RFID method
+ * @return [description]
+ */
+bool RFIDEasy::IsNewCardPresent() {
+	return this->mfrc522->PICC_IsNewCardPresent();
+}
+
+/**
+ * Run the RFID method
+ * @return [description]
+ */
+bool RFIDEasy::ReadCardSerial() {
+	return this->mfrc522->PICC_ReadCardSerial();
+}
+
+/**
  * Write data to the RFID tag
  * @param block  The block to write
  * @param buffer [description]
@@ -68,13 +84,13 @@ void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 
 /**
  * Writes data to the RFID tag
- * @param blockNumber [description]
- * @param text        [description]
+ * @param blockNumber the block to write the data
+ * @param text        The data
  */
 void RFIDEasy::writeBlock(int blockNumber, String text) {
 	// Create buffer
-	byte buffer[sizeof(text)];
-	text.getBytes(buffer, sizeof(text));
+	byte buffer[text.length()];
+	text.getBytes(buffer, text.length());
 
 	// Run method
 	this->writeBlock(blockNumber, buffer);
@@ -83,7 +99,7 @@ void RFIDEasy::writeBlock(int blockNumber, String text) {
 /**
  * Reads a block from the RFID
  * @param  blockNumber The block to read
- * @return             [description]
+ * @return             The read data
  */
 String RFIDEasy::readBlock(int blockNumber) {
 
@@ -116,52 +132,52 @@ String RFIDEasy::readBlock(int blockNumber) {
 	byte buffer[18];
 
 	// we need to define a variable with the read buffer size, since the MIFARE_Read method below needs a pointer to the variable that contains the size... 
-	status = this->mfrc522->MIFARE_Read(blockNumber, buffer, &buffersize);//&buffersize is a pointer to the buffersize variable; MIFARE_Read requires a pointer instead of just a number
+	status = this->mfrc522->MIFARE_Read(blockNumber, buffer, &buffersize);
+	// &buffersize is a pointer to the buffersize variable; MIFARE_Read requires a pointer instead of just a number
 	
 	// Check if successful
 	if (status != MFRC522::STATUS_OK) {
-		Serial.print("[ERROR] MIFARE_Write() failed: ");
+		Serial.print("[ERROR] MIFARE_Read() failed: ");
 		Serial.println(this->mfrc522->GetStatusCodeName(status));
 		return String(0);
 	}
 
+	// Returns the data
 	return String((char*) buffer);
 }
 
 /**
- * [RFIDEasy::write description]
- * @param startBlock [description]
- * @param buffer     [description]
+ * Writes a array of data continuously on the tag system, jumping the not allowed trailling blocks
+ * @param startBlock 	The start block to write
+ * @param buffer     	The buffer with data
+ * @param buffer_length	The buffer size
  */
-void RFIDEasy::write(int startBlock, byte buffer[]) {
-	// Get the data size
-	int buffer_size = sizeof(buffer);
-
+void RFIDEasy::write(int startBlock, byte buffer[], int buffer_length) {
 	// Get the number of blocks to write the data
-	int blocks = buffer_size / 16;
-	if(buffer_size % 16 != 0) blocks++;
-	
+	int blocks = this->sizeBlocks(buffer_length);
+
+	// Normalize the data, puts blank space until complete the last block
+	byte* test = this->normalize(blocks, buffer, buffer_length);
+
 	// Start the current block with the argument
 	int currentBlock = startBlock;
 
-	int writedBlocks = 0;
+	// Check if the data is too big
+	if(startBlock + blocks >= 16) {
+		Serial.println("[ERROR] The data length exceed the 16 blocks limit.");
+		return;
+	}
+
 	// Finish loop if all blocks are writed
+	byte buffer_block[16];
+	int writedBlocks = 0;
 	while(writedBlocks < blocks) {
-		
-		if(writedBlocks < blocks - 1) {
-			byte subarray[16];
 
-			for(int i = 0; i < 16; i++) {
-				subarray[i] = buffer[i + (writedBlocks * 16)];
-			}
+		// Get a substring of the data to fit on the block
+		this->subArray(writedBlocks * 16, 16, test, buffer_block);
 
-			Serial.println((char*) subarray);
-		}
-
-		// Split array
-
-		// Write
-		//this->writeBlock(currentBlock, );
+		// Write to the tag
+		this->writeBlock(currentBlock, buffer_block);
 
 		// Update the current block
 		currentBlock++;
@@ -172,5 +188,91 @@ void RFIDEasy::write(int startBlock, byte buffer[]) {
 
 		// Update blocks writed count
 		writedBlocks++;
+	}
+
+	// Dispose memory
+	delete test;
+}
+
+/**
+ * Writes a array of data continuously on the tag system, jumping the not allowed trailling blocks
+ * @param startBlock 	The start block to write
+ * @param text     		The data
+ */
+void RFIDEasy::write(int startBlock, String text) {
+	// Create buffer
+	byte buffer[text.length()];
+	text.getBytes(buffer, text.length());
+
+	// Run method
+	this->write(startBlock, buffer, text.length());
+}
+
+/**
+ * Reads a sequence of blocks from the tag and returns a concatenated string
+ * @param  startBlock The start block to read
+ * @param  endBlock   The end block to read
+ * @return            The read data
+ */
+String RFIDEasy::read(int startBlock, int endBlock) {
+	String response = "";
+
+	// Reads data and trims the end
+	for(int i = 0; i < endBlock - startBlock + 1; i++) {
+		response += String(this->readBlock(i + startBlock)).substring(0, 16);
+	}
+
+	return response;
+}
+
+/**
+ * Gets the size of the data in blocks count
+ * @param  buffer_length The buffer size
+ * @return               The size in blocks
+ */
+int RFIDEasy::sizeBlocks(int buffer_length) {
+	int blocks = buffer_length / 16;
+	if(buffer_length % 16 != 0) blocks++;
+
+	return blocks;
+}
+
+/**
+ * Gets the size of the data in blocks count
+ * @param  text The data
+ * @return      The size in blocks	
+ */
+int RFIDEasy::sizeBlocks(String text) {
+	return this->sizeBlocks(text.length());
+}
+
+/**
+ * Normalize the data, inserting blank space in the final of the buffer to complete a full number block size
+ * @param  blocks        The correct number of blocks
+ * @param  buffer        The data
+ * @param  buffer_length The buffer size
+ * @return               [description]
+ */
+byte* RFIDEasy::normalize(int blocks, byte buffer[], int buffer_length) {
+	byte* normalized = new byte[blocks * 16];
+	for(int i = 0; i < blocks * 16; i++) {
+		if(i < buffer_length)
+			normalized[i] = buffer[i];
+		else
+			normalized[i] = ' ';
+	}
+	return normalized;
+}
+
+/**
+ * Creates a sub array derivated
+ * @param start    The start for the subarray
+ * @param length   The length to copy from the original array
+ * @param array    The data array
+ * @param subarray The coppied sub array
+ */
+void RFIDEasy::subArray(int start, int length, byte array[], byte subarray[]) {
+	for(int i = 0; i < length; i++) {
+		subarray[i] = array[i + start];
 	}
 }
