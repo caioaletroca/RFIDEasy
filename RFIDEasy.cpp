@@ -31,6 +31,23 @@ bool RFIDEasy::ReadCardSerial() {
 	return this->mfrc522->PICC_ReadCardSerial();
 }
 
+String RFIDEasy::getUID() {
+	String uid;
+
+	// Get the uid on the tag
+	for (byte i = 0; i < this->mfrc522->uid.size; i++) 
+	{
+		uid.concat(String(this->mfrc522->uid.uidByte[i] < 0x10 ? " 0" : " "));
+		uid.concat(String(this->mfrc522->uid.uidByte[i], HEX));
+	}
+
+	// Format data
+	uid.toUpperCase();
+	uid.replace(" ", "");
+
+	return uid;
+}
+
 /**
  * Write data to the RFID tag
  * @param block  The block to write

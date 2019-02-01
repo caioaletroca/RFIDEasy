@@ -25,6 +25,7 @@ class RFIDEasy
 		bool ReadCardSerial();
 
 		// Read/Write Operations
+		String getUID();
 		void writeBlock(int blockNumber, byte buffer[]);
 		void writeBlock(int blockNumber, String text);
 		String readBlock(int blockNumber);
