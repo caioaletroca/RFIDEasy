@@ -31,7 +31,7 @@ class RFIDEasy
 		String readBlock(int blockNumber);
 		void write(int startBlock, byte buffer[], int buffer_length);
 		void write(int startBlock, String text);
-		String read(int startBlock, int endBlock);
+		String read(int startBlock, int blocksNumber);
 
 		// Addons
 		void endProcess();

@@ -232,12 +232,12 @@ void RFIDEasy::write(int startBlock, String text) {
  * @param  endBlock   The end block to read
  * @return            The read data
  */
-String RFIDEasy::read(int startBlock, int endBlock) {
+String RFIDEasy::read(int startBlock, int blocksNumber) {
 	String response = "";
 
 	// Reads data and trims the end
 	int currentBlock = startBlock;
-	for(int i = 0; i < endBlock - startBlock + 1; i++) {
+	for(int i = 0; i < blocksNumber; i++) {
 		// Skip if hit the trailing block
 		if(this->checkTrailerBlock(currentBlock))
 			currentBlock++;
