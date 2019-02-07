@@ -1,7 +1,7 @@
 # RFIDEasy &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Handles the RFID operations in MIFARE cards more easely and undertandable.
-This library was only tested on MIFARE cars with 1K of memory. If you wanna expand this library capatibilities, feel free to make a pull request.
+This library was only tested on MIFARE cards with 1K of memory. If you wanna expand this library capatibilities, feel free to make a pull request.
 
 # Information
 You can find more information about the memory on that tag on the manufactures manual [here](https://www.jadaktech.com/skyetekfiles/docs/m2/mifareclassic.pdf).
