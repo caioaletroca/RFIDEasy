@@ -26,10 +26,23 @@ RFIDEasy rfid;
 # Documentation
 
 ### Constructors
+
 ```cpp
 RFIDEasy(int SS_PIN, int RST_PIN);
 ```
 > Default constructor. Receives the SS and RST pins as arguments.
+
+### IsNewCardPresent
+```cpp
+bool IsNewCardPresent()
+```
+> This method is a handleful access for the internal library with similar name. For more information read the [Attention](#attention) section.
+
+### ReadCardSerial
+```cpp
+bool ReadCardSerial()
+```
+> This method is another a handleful access for the internal library with similar name. It calls the initial handleshaking between the card and the RFID sensor.
 
 ## Read/Write Operations
 
@@ -64,6 +77,20 @@ void write(int startBlock, byte buffer[], int buffer_length)
 void write(int startBlock, String text)
 ```
 > Receives the block number to start the write operation and the data as a string
+
+### readBlock
+
+```cpp
+String readBlock(int blockNumber)
+```
+> Reads a block from the card memory and returns the data as a string. The block only has 16 bytes long
+
+### read
+
+```cpp
+String read(int startBlock, int blocksNumber)
+```
+> Reads data from the card, starting at a specified block, with a number of blocks long. The number of blocks read doesn't count the trailling blocks, which is automatically skipped. The blocks are concatenated and returns as a string
 
 ### close
 
@@ -101,3 +128,8 @@ int sizeBlocks(int buffer_length)
 int sizeBlocks(String text)
 ```
 > Calculate the size with the string data
+
+# Attention
+
+Both the methods IsNewCardPresent() and close() prevents the sensor to perform multiples operations on the same card. IsNewCardPresent only returns trues if the sensor detects a card in range, and the connection was not closed. But to update the internal API, it needs to be called once with no card in the sensor's range.
+You could call this method always on the main loop in the micro controller, but if you use in another location, keep in mind this behavior.
