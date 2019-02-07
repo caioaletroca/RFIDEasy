@@ -64,3 +64,40 @@ void write(int startBlock, byte buffer[], int buffer_length)
 void write(int startBlock, String text)
 ```
 > Receives the block number to start the write operation and the data as a string
+
+### close
+
+```cpp
+void close()
+```
+> Close the connection between the card and the RFID sensor, preventing for multiples read/write operations.
+
+## Misc Methods
+
+### clearBlock
+
+```cpp
+void clearBlock(int blockNumber, char character)
+```
+> Clear a specified block filling it with one character passed as argument
+
+### clear
+
+```cpp
+void clear(int startBlock, int blocksNumber, char character)
+```
+> Clear a memory section starting with a specific block, and ending within a length, following the same logic as the write method. The spaces are filled with a character
+
+### sizeBlocks
+
+Calculate the number of blocks from the memory needed to store the data.
+
+```cpp
+int sizeBlocks(int buffer_length)
+```
+> Receives the buffer_length as argument
+
+```cpp
+int sizeBlocks(String text)
+```
+> Calculate the size with the string data
