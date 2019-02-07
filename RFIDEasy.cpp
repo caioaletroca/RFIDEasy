@@ -55,6 +55,9 @@ String RFIDEasy::getUID() {
  */
 void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 
+	// Clear error
+	error = 0;
+
 	//this makes sure that we only write into data blocks. Every 4th block is a trailer block for the access/security info.
 	int largestModulo4Number = blockNumber / 4 * 4;
 	int trailerBlock = largestModulo4Number + 3; //determine trailer block for the sector
@@ -63,6 +66,10 @@ void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 	// block number is a trailer block (modulo 4); quit and send error code 2
 	if (blockNumber > 2 && (blockNumber + 1) % 4 == 0) {
 		Serial.println(String("[ERROR] Block ") + String(blockNumber) + String(" is a trailer block, cannot write."));
+
+		// Set error
+		error = 1;
+
 		return;
 	}
 
@@ -82,6 +89,10 @@ void RFIDEasy::writeBlock(int blockNumber, byte buffer[]) {
 	if (status != MFRC522::STATUS_OK) {
 		Serial.print("[ERROR] PCD_Authenticate() failed: ");
 		Serial.println(this->mfrc522->GetStatusCodeName(status));
+
+		// Set error
+		error = 2;
+
 		return;
 	}
 	// it appears the authentication needs to be made before every block read/write within a specific sector.
@@ -121,6 +132,9 @@ void RFIDEasy::writeBlock(int blockNumber, String text) {
  */
 String RFIDEasy::readBlock(int blockNumber) {
 
+	// Clear error
+	error = 0;
+
 	int largestModulo4Number = blockNumber / 4 * 4;
 	int trailerBlock = largestModulo4Number + 3; //determine trailer block for the sector
 
@@ -140,6 +154,10 @@ String RFIDEasy::readBlock(int blockNumber) {
 	if (status != MFRC522::STATUS_OK) {
 		Serial.print("[ERROR] PCD_Authenticate() failed: ");
 		Serial.println(this->mfrc522->GetStatusCodeName(status));
+
+		// Set error
+		error = 1;
+
 		return String(0);
 	}
 	//it appears the authentication needs to be made before every block read/write within a specific sector.
@@ -157,6 +175,10 @@ String RFIDEasy::readBlock(int blockNumber) {
 	if (status != MFRC522::STATUS_OK) {
 		Serial.print("[ERROR] MIFARE_Read() failed: ");
 		Serial.println(this->mfrc522->GetStatusCodeName(status));
+
+		// Set error
+		error = 2;
+
 		return String(0);
 	}
 

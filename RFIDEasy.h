@@ -16,6 +16,7 @@ class RFIDEasy
 	public:
 		// Properties
 		MFRC522* mfrc522;
+		int error = 0;
 
 		// Methods
 		RFIDEasy(int SS_PIN, int RST_PIN);
