@@ -278,7 +278,7 @@ String RFIDEasy::read(int startBlock, int blocksNumber) {
 /**
  * End the communication between the RFID sensor and arduino
  */
-void RFIDEasy::endProcess() {
+void RFIDEasy::close() {
 	this->mfrc522->PICC_HaltA();
   	this->mfrc522->PCD_StopCrypto1();
 }
