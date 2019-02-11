@@ -1,0 +1,30 @@
+#######################################
+# Syntax Coloring Map For RFIDEasy
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+RFIDEasy	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+IsNewCardPresent	KEYWORD2
+ReadCardSerial	KEYWORD2
+getUID	KEYWORD2
+writeBlock	KEYWORD2
+readBlock	KEYWORD2
+write	KEYWORD2
+read	KEYWORD2
+close	KEYWORD2
+clearBlock	KEYWORD2
+clear	KEYWORD2
+sizeBlocks	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+#	LITERAL1
