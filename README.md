@@ -133,3 +133,7 @@ int sizeBlocks(String text)
 
 Both the methods IsNewCardPresent() and close() prevents the sensor to perform multiples operations on the same card. IsNewCardPresent only returns trues if the sensor detects a card in range, and the connection was not closed. But to update the internal API, it needs to be called once with no card in the sensor's range.
 You could call this method always on the main loop in the micro controller, but if you use in another location, keep in mind this behavior.
+
+# Example
+
+- [ReadWriteExample](https://github.com/caioaletroca/RFIDEasy/blob/master/Examples/ReadWriteExample/ReadWriteExample.ino);
