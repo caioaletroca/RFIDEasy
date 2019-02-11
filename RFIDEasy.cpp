@@ -304,11 +304,11 @@ void RFIDEasy::clearBlock(int blockNumber, char character) {
  * @param endBlock    The end block to clear
  * @param character   The character to fill
  */
-void RFIDEasy::clear(int startBlock, int endBlock, char character) {
+void RFIDEasy::clear(int startBlock, int blocksNumber, char character) {
 
 	// Reads data and trims the end
 	int currentBlock = startBlock;
-	for(int i = 0; i < endBlock - startBlock + 1; i++) {
+	for(int i = 0; i < blocksNumber; i++) {
 		// Skip if hit the trailing block
 		if(this->checkTrailerBlock(currentBlock))
 			currentBlock++;
